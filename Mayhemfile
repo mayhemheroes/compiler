@@ -1,0 +1,6 @@
+project: rnshah9/mayhem-compiler
+target: pawncc
+
+cmds:
+  - cmd: /compiler/build/pawncc @@
+    filepath: /test.p
