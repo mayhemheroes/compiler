@@ -13,5 +13,6 @@ RUN ldd /compiler/build/pawncc | tr -s '[:blank:]' '\n' | grep '^/' | xargs -I %
 FROM ubuntu:20.04 as package
 
 COPY --from=builder /deps /deps
+COPY --from=builder /lib/ld-linux.so.2 /deps
 COPY --from=builder /compiler/build/pawncc /compiler/build/pawncc
 ENV LD_LIBRARY_PATH=/deps
