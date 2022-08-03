@@ -2,5 +2,5 @@ project: compiler
 target: pawncc
 
 cmds:
-  - cmd: /compiler/build/pawncc /test.p
+  - cmd: /install/bin/pawncc @@
     filepath: /test.p
