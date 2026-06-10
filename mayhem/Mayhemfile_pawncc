@@ -1,0 +1,28 @@
+project: compiler
+target: pawncc
+
+# File-input (CLI) target: feed the fuzz bytes as a Pawn SOURCE file to pawncc — the Pawn language
+# compiler (pawn-lang/compiler). pawncc reads the source file and compiles it to an .amx P-code
+# module, running the WHOLE front+back end on the input: preprocessor, lexer, parser, semantic
+# analysis, and P-code generation (source/compiler/*.c). Not libFuzzer: the compiler binary IS the
+# natural fuzz surface, so the file-input target both fuzzes and serves as its own single-input
+# reproducer. @@ is the input-file placeholder.
+#
+# Ported from the OLD mayhemheroes integration's single target (old Mayhemfile: target `pawncc`,
+# ran `/compiler/build/pawncc /test.p` over a fixed /test.p source path — the pawncc the old
+# Dockerfile built via `cmake ../source/compiler && make`). Same shape and target name, now pointed
+# at the base-image build output under /mayhem. (No ASAN_OPTIONS here — never in a Mayhemfile.)
+#
+# Read-only scratch fix (README.md FAQ cause 2 / issue #157): pawncc writes <basename>.amx
+# (the compiled P-code binary) to the current working directory. Under Mayhem's coverage
+# collection the image root is read-only — any write to /mayhem (or CWD=/mayhem) fails with
+# EROFS → pawncc aborts before any edges are recorded → 0-edge / has_critical_errors.
+# Fix: stage the input in /dev/shm (filepath: /dev/shm/in.pwn, giving it the .pwn extension
+# pawncc checks for) and run with cwd: /dev/shm so the output lands at /dev/shm/in.amx —
+# the only writable location under --read-only is the kernel-provided /dev/shm tmpfs.
+cmds:
+  - cmd: /mayhem/pawncc @@
+    filepath: /dev/shm/in.pwn
+    cwd: /dev/shm
+testsuite:  # mayhem-lint: keep-testsuite — pawncc is a format-gated compiler; random bytes hit the lexer error path in a handful of edges; .pwn seeds give the fuzzer valid Pawn syntax to mutate into real parse/semantic paths
+  - file:///mayhem/mayhem/testsuite
