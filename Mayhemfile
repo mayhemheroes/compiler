@@ -1,0 +1,6 @@
+project: compiler
+target: pawncc
+
+cmds:
+  - cmd: /install/bin/pawncc @@
+    filepath: /test.p

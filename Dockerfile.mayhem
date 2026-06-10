@@ -1,0 +1,15 @@
+FROM --platform=linux/amd64 ubuntu:20.04 as builder
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y gcc gcc-multilib cmake make
+
+COPY . /compiler
+WORKDIR /compiler/build
+RUN cmake ../source/compiler -DCMAKE_C_FLAGS=-m32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/install
+RUN make -j8
+RUN make install
+
+FROM ubuntu:20.04 as package
+RUN apt-get update
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y gcc-multilib
+COPY --from=builder /install /install
+ENV LD_LIBRARY_PATH=/install/lib
